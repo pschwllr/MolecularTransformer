@@ -467,6 +467,8 @@ def translate_opts(parser):
     group.add_argument('-output', default='pred.txt',
                        help="""Path to output the predictions (each line will
                        be the decoded sequence""")
+    group.add_argument('-log_probs', action='store_true',
+                       help="Save log probs of predictions, use -output + '_log_probs' ")
     group.add_argument('-report_bleu', action='store_true',
                        help="""Report bleu score after translation,
                        call tools/multi-bleu.perl on command line""")

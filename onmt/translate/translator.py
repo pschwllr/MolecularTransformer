@@ -18,9 +18,12 @@ import onmt.opts as opts
 import onmt.decoders.ensemble
 
 
-def build_translator(opt, report_score=True, logger=None, out_file=None):
+def build_translator(opt, report_score=True, logger=None, out_file=None, log_probs_out_file=None):
     if out_file is None:
         out_file = codecs.open(opt.output, 'w+', 'utf-8')
+
+        if opt.log_probs:
+            log_probs_out_file = codecs.open(opt.output + '_log_probs', 'w+', 'utf-8')
 
     dummy_parser = argparse.ArgumentParser(description='train.py')
     opts.model_opts(dummy_parser)
@@ -50,6 +53,7 @@ def build_translator(opt, report_score=True, logger=None, out_file=None):
     translator = Translator(model, fields, global_scorer=scorer,
                             out_file=out_file, report_score=report_score,
                             copy_attn=model_opt.copy_attn, logger=logger,
+                            log_probs_out_file=log_probs_out_file,
                             **kwargs)
     return translator
 
@@ -101,6 +105,7 @@ class Translator(object):
                  report_rouge=False,
                  verbose=False,
                  out_file=None,
+                 log_probs_out_file=None,
                  fast=False,
                  image_channel_size=3):
         self.logger = logger
@@ -128,6 +133,7 @@ class Translator(object):
         self.data_type = data_type
         self.verbose = verbose
         self.out_file = out_file
+        self.log_probs_out_file = log_probs_out_file
         self.report_score = report_score
         self.report_bleu = report_bleu
         self.report_rouge = report_rouge
@@ -235,6 +241,11 @@ class Translator(object):
                 all_predictions += [n_best_preds]
                 self.out_file.write('\n'.join(n_best_preds) + '\n')
                 self.out_file.flush()
+
+                if self.log_probs_out_file is not None:
+                    self.log_probs_out_file.write(
+                        '\n'.join([str(t.item()) for t in trans.pred_scores[:self.n_best]]) + '\n')
+                    self.log_probs_out_file.flush()
 
                 if self.verbose:
                     sent_number = next(counter)
