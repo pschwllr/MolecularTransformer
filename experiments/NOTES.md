@@ -65,6 +65,13 @@ Atom-mapping basically shows
 
 Atom-mapping is usually ill-defined and even in the description of the dataset published  
 
+
+Data can be downloaded from
+
+(link)
+
+and should be best placed in the `data/` folder
+
 ## Data augmentation
 
 In the datasets sets ending with `_augm`, the number of training datapoints was doubled.
@@ -85,7 +92,7 @@ Use the preprocessing.py script in the root folder:
 
 ```bash
 dataset=MIT # MIT / STEREO
-flavor=mixed # mixed / separated / mixed_augm / separated_augm
+flavor=mixed_augm # mixed / separated / mixed_augm / separated_augm
 python preprocess.py -train_src data/rxn/${dataset}/${flavor}/src-train.txt \
                      -train_tgt data/rxn/${dataset}/${flavor}/tgt-train.txt \
                      -valid_src data/rxn/${dataset}/${flavor}/src-val.txt \
@@ -101,15 +108,51 @@ The `vocab_size` and `seq_length` are chosen to include the whole datasets.
 
 ## Training
 
-Our baseline models are trained for 230k steps (which corresponded to ~24h on a single GPU):
+Our baseline models are trained for 230k steps (which corresponded to ~24 hours on a single GPU):
 
 ```bash
-python -u train.py -data data/separated/MIT_separated_augm -save_model available_models/separated/MIT_separated_augm_model \
-        -layers 4 -rnn_size 256 -word_vec_size 256   \
-        -encoder_type transformer -decoder_type transformer -position_encoding \
-        -train_steps 230000  -save_checkpoint_steps 10000 -max_generator_batches 32 -dropout 0.1 -keep_checkpoint 2\
-        -share_embeddings -batch_size 4096 -batch_type tokens -normalization tokens  -accum_count 4 \
-        -optim adam -adam_beta2 0.998 -decay_method noam -warmup_steps 8000 -learning_rate 2 \
-        -max_grad_norm 0 -param_init 0  -param_init_glorot \
-        -label_smoothing 0.0  -seed 42 -report_every 1000 -gpu_ranks 0
+dataset=MIT # MIT / STEREO
+flavor=mixed_augm # mixed / separated / mixed_augm / separated_augm
+
+python -u train.py -data data/${dataset}_${flavor} \
+                   -save_model available_models/${dataset}_${flavor}/${dataset}_${flavor}_model \
+                   -seed 42 -gpu_ranks 0 -save_checkpoint_steps 10000 -keep_checkpoint 3 \
+                   -train_steps 230000 -param_init 0  -param_init_glorot -max_generator_batches 32 \
+                   -batch_size 4096 -batch_type tokens -normalization tokens -max_grad_norm 0  -accum_count 4 \
+                   -optim adam -adam_beta1 0.9 -adam_beta2 0.998 -decay_method noam -warmup_steps 8000  \
+                   -learning_rate 2 -label_smoothing 0.0 -report_every 1000 \
+                   -layers 4 -rnn_size 256 -word_vec_size 256 -encoder_type transformer -decoder_type transformer \
+                   -dropout 0.1 -position_encoding -share_embeddings \
+                   -global_attention general -global_attention_function softmax -self_attn_type scaled-dot \
+                   -heads 8 -transformer_ff 2048
+                                
 ```
+
+To achieve the best results, we train for another 230k, save checkpoints every 10k steps and average their weights.
+
+
+
+## Testing
+
+The models that were used to generated the results from the paper, can be downloaded from: 
+
+```bash
+
+dataset=MIT # MIT / STEREO
+flavor=mixed_augm # mixed / separated / mixed_augm / separated_augm
+model=model_average
+
+python translate.py -model available_models/${dataset}_${flavor}/${dataset}_${flavor}_${model} \
+                    -src data/rxn/${dataset}/${flavor}/src-test.txt \
+                    -output experiments/results/predictions_test_${dataset}_${flavor}_${model}.txt \
+                    -batch_size 64 -replace_unk -max_length 200
+
+```
+
+
+## Results
+
+
+## IBM RXN for Chemistry
+
+A model trained on ... is hosted on ... . 
