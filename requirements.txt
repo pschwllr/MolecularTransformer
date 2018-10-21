@@ -1,5 +1,5 @@
 six
 tqdm
 torch>=0.4.1
-git+https://github.com/pytorch/text
+torchtext=0.3.1
 future

@@ -2,6 +2,8 @@
 
 Code for the ... paper ().
 
+To implement our models we are based on OpenNMT-py (v0.4.1).
+
 ## Install requirements
 
 We suggest you to create a new conda environment:
