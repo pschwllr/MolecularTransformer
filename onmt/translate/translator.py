@@ -48,7 +48,7 @@ def build_translator(opt, report_score=True, logger=None, out_file=None, log_pro
                         "ignore_when_blocking", "dump_beam", "report_bleu",
                         "data_type", "replace_unk", "gpu", "verbose", "fast",
                         "sample_rate", "window_size", "window_stride",
-                        "window", "image_channel_size"]}
+                        "window", "image_channel_size", "mask_from"]}
 
     translator = Translator(model, fields, global_scorer=scorer,
                             out_file=out_file, report_score=report_score,
@@ -107,6 +107,7 @@ class Translator(object):
                  out_file=None,
                  log_probs_out_file=None,
                  fast=False,
+                 mask_from='',
                  image_channel_size=3):
         self.logger = logger
         self.gpu = gpu
@@ -139,6 +140,12 @@ class Translator(object):
         self.report_rouge = report_rouge
         self.fast = fast
         self.image_channel_size = image_channel_size
+
+        if mask_from != '':
+            from ..utils.masking import ChemVocabMask
+            self.mask = ChemVocabMask(from_file=mask_from)
+        else:
+            self.mask = None
 
         # for debugging
         self.beam_trace = self.dump_beam != ""
@@ -403,6 +410,10 @@ class Translator(object):
         results["gold_score"] = [0] * batch_size
         results["batch"] = batch
 
+        if self.mask is not None:
+            mask = self.mask.get_log_probs_masking_tensor(src.squeeze(2), beam_size).to(memory_bank.device)
+
+
         for step in range(max_length):
             decoder_input = alive_seq[:, -1].view(1, -1, 1)
 
@@ -420,6 +431,9 @@ class Translator(object):
 
             if step < min_length:
                 log_probs[:, end_token] = -1e20
+
+            if self.mask is not None:
+                log_probs = log_probs * mask
 
             # Multiply probs by the beam probability.
             log_probs += topk_log_probs.view(-1).unsqueeze(1)
@@ -515,6 +529,9 @@ class Translator(object):
             dec_states.map_batch_fn(
                 lambda state, dim: state.index_select(dim, select_indices))
 
+            if self.mask is not None:
+                mask = mask.index_select(0, select_indices)
+
         return results
 
     def _translate_batch(self, batch, data):
@@ -573,6 +590,9 @@ class Translator(object):
             src_lengths = torch.Tensor(batch_size).type_as(memory_bank.data) \
                 .long() \
                 .fill_(memory_bank.size(0))
+
+        if self.mask is not None:
+            mask = self.mask.get_log_probs_masking_tensor(src.squeeze(2), 1).to(memory_bank.device)
 
         # (2) Repeat src objects `beam_size` times.
         src_map = rvar(batch.src_map.data) \
@@ -635,8 +655,12 @@ class Translator(object):
             # (c) Advance each beam.
             for j, b in enumerate(beam):
                 if not b.done():
-                    b.advance(out[:, j],
-                              beam_attn.data[:, j, :memory_lengths[j]])
+                    if self.mask is not None:
+                        b.advance(out[:, j],
+                                  beam_attn.data[:, j, :memory_lengths[j]], mask[j])
+                    else:
+                        b.advance(out[:, j],
+                                  beam_attn.data[:, j, :memory_lengths[j]])
                     dec_states.beam_update(j, b.get_current_origin(), beam_size)
 
         # (4) Extract sentences from beam.

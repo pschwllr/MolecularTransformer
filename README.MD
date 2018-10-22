@@ -13,14 +13,14 @@ conda create -n mol_transformer python=3.5
 source activate mol_transformer
 conda install rdkit -c rdkit
 conda install future six tqdm 
-pip install torchtext=0.3.1
+pip install torchtext==0.3.1
 ```
 
 The code was tested for pytorch 0.4.1, to install it go on https://pytorch.org/get-started/locally/.
 Select the right operating system and CUDA version and run the command, e.g.:
 
 ```bash
-conda install pytorch torchvision -c pytorch
+conda install pytorch=0.4.1 torchvision -c pytorch
 ```
 
 
@@ -150,6 +150,34 @@ python translate.py -model available_models/${dataset}_${flavor}/${dataset}_${fl
                     -batch_size 64 -replace_unk -max_length 200
 
 ```
+
+### Constrained beam search
+
+As the model in reaction prediction should not predict any atoms that were not observed in the inputs. 
+We can constrain the beam search such that only atom kinds that are in the source sequence can be predicted.
+
+To do so, we first have to produce the mask:
+ 
+```bash
+dataset=MIT # MIT / STEREO
+flavor=mixed # mixed / separated / mixed_augm / separated_augm 
+python tools/make_rxn_vocab_mask.py -v data/${dataset}_${flavor}.vocab.pt -o data/masks/${dataset}_${flavor}_mask.pt  
+
+```
+
+and then define `-mask_from`, when executing `translate.py`:
+
+```bash
+python translate.py -model available_models/${dataset}_${flavor}/${dataset}_${flavor}_${model} \
+                    -src data/rxn/${dataset}/${flavor}/src-test.txt \
+                    -output experiments/results/predictions_test_${dataset}_${flavor}_${model}.txt \
+                    -batch_size 64 -replace_unk -max_length 200 \
+                    -mask_from data/masks/${dataset}_${flavor}_mask.pt
+```
+
+Our observation is that it does not really improve the top-1, 
+as the model almost perfectly learned the constraint for its top-1 predictions. However,
+chemically more reasonable predictions are obtained for top-n (n>1).
 
 
 ## Results

@@ -71,7 +71,7 @@ class Beam(object):
         "Get the backpointers for the current timestep."
         return self.prev_ks[-1]
 
-    def advance(self, word_probs, attn_out):
+    def advance(self, word_probs, attn_out, mask=None):
         """
         Given prob over words for every last beam `wordLk` and attention
         `attn_out`: Compute and update the beam search.
@@ -91,6 +91,8 @@ class Beam(object):
         if cur_len < self.min_length:
             for k in range(len(word_probs)):
                 word_probs[k][self._eos] = -1e20
+        if mask is not None:
+            word_probs = word_probs * mask
         # Sum the previous scores.
         if len(self.prev_ks) > 0:
             beam_scores = word_probs + \
