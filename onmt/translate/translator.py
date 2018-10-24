@@ -377,28 +377,35 @@ class Translator(object):
         # Tile states and memory beam_size times.
         dec_states.map_batch_fn(
             lambda state, dim: tile(state, beam_size, dim=dim))
-        memory_bank = tile(memory_bank, beam_size, dim=1)
+
+        if type(memory_bank) == tuple:
+            device = memory_bank[0].device
+            memory_bank = [tile(m, beam_size, dim=1) for m in memory_bank]
+        else:
+            memory_bank = tile(memory_bank, beam_size, dim=1)
+            device = memory_bank.device
         memory_lengths = tile(src_lengths, beam_size)
 
         top_beam_finished = torch.zeros([batch_size], dtype=torch.uint8)
         batch_offset = torch.arange(batch_size, dtype=torch.long)
+
         beam_offset = torch.arange(
             0,
             batch_size * beam_size,
             step=beam_size,
             dtype=torch.long,
-            device=memory_bank.device)
+            device=device)
         alive_seq = torch.full(
             [batch_size * beam_size, 1],
             start_token,
             dtype=torch.long,
-            device=memory_bank.device)
+            device=device)
         alive_attn = None
 
         # Give full probability to the first beam on the first step.
         topk_log_probs = (
             torch.tensor([0.0] + [float("-inf")] * (beam_size - 1),
-                         device=memory_bank.device).repeat(batch_size))
+                         device=device).repeat(batch_size))
 
         # Structure that holds finished hypotheses.
         hypotheses = [[] for _ in range(batch_size)]  # noqa: F812
@@ -533,7 +540,10 @@ class Translator(object):
                               -1, alive_attn.size(-1))
 
             # Reorder states.
-            memory_bank = memory_bank.index_select(1, select_indices)
+            if type(memory_bank) == list:
+                memory_bank = [m.index_select(1, select_indices) for m in memory_bank]
+            else:
+                memory_bank = memory_bank.index_select(1, select_indices)
             memory_lengths = memory_lengths.index_select(0, select_indices)
             dec_states.map_batch_fn(
                 lambda state, dim: state.index_select(dim, select_indices))

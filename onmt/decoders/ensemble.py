@@ -32,6 +32,10 @@ class EnsembleDecoderState(DecoderState):
     def __getitem__(self, index):
         return self.model_decoder_states[index]
 
+    def map_batch_fn(self, fn):
+        for model_state in self.model_decoder_states:
+            model_state.map_batch_fn(fn)
+
 
 class EnsembleDecoderOutput(object):
     """ Wrapper around multiple decoder final hidden states """
@@ -90,12 +94,12 @@ class EnsembleDecoder(nn.Module):
             result[key] = torch.stack([attn[key] for attn in attns]).mean(0)
         return result
 
-    def init_decoder_state(self, src, memory_bank, enc_hidden):
+    def init_decoder_state(self, src, memory_bank, enc_hidden, with_cache=False):
         """ See :obj:`RNNDecoderBase.init_decoder_state()` """
         return EnsembleDecoderState(
             [model_decoder.init_decoder_state(src,
                                               memory_bank[i],
-                                              enc_hidden[i])
+                                              enc_hidden[i], with_cache)
              for i, model_decoder in enumerate(self.model_decoders)])
 
 
@@ -118,6 +122,7 @@ class EnsembleGenerator(nn.Module):
                          for i, model_generator
                          in enumerate(self.model_generators)]
         return torch.stack(distributions).mean(0)
+
 
 
 class EnsembleModel(NMTModel):
