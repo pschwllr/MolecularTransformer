@@ -471,13 +471,17 @@ class Translator(object):
                     alive_attn = alive_attn.index_select(1, select_indices)
                     alive_attn = torch.cat([alive_attn, current_attn], 0)
 
-            is_finished = topk_ids.to('cpu').eq(end_token)
+            is_finished = topk_ids.eq(end_token)
             if step + 1 == max_length:
                 is_finished.fill_(1)
-            top_beam_finished |= is_finished[:, 0].eq(1)
 
             # Save finished hypotheses.
             if is_finished.any():
+                # Penalize beams that finished.
+                topk_log_probs.masked_fill_(is_finished, -1e10)
+                is_finished = is_finished.to('cpu')
+                top_beam_finished |= is_finished[:, 0].eq(1)
+
                 predictions = alive_seq.view(-1, beam_size, alive_seq.size(-1))
                 attention = (
                     alive_attn.view(
@@ -489,6 +493,7 @@ class Translator(object):
                     finished_hyp = is_finished[i].nonzero().view(-1)
                     # Store finished hypotheses for this batch.
                     for j in finished_hyp:
+                        # if (predictions[i, j, 1:] == end_token).sum() <= 1:
                         hypotheses[b].append((
                             topk_scores[i, j],
                             predictions[i, j, 1:],  # Ignore start_token.
