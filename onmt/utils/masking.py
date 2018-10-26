@@ -76,7 +76,7 @@ class ChemVocabMask(object):
 
     def _get_valid_tokens_per_src_seq_in_batch(self, src):
         valid_tokens_per_seq = [
-            np.unique([vocab_list for voc in np.unique(s.numpy()) for vocab_list in self.vocab_vocab_dict[voc]]) for s
+            np.unique([vocab_list for voc in np.unique(s.cpu().numpy()) for vocab_list in self.vocab_vocab_dict[voc]]) for s
             in src.t()]
         return valid_tokens_per_seq
 
@@ -90,6 +90,7 @@ class ChemVocabMask(object):
         mask = torch.stack([(torch.ones(len(self.vocab)).index_fill(0, torch.tensor(valid_tokens), 0) \
                              * 1e15).index_fill(0,torch.tensor(valid_tokens), 1)
                             for valid_tokens in valid_tokens_per_seq for i in range(beam_size)])
+        mask = mask.to(src.device)
         return mask
 
     def _get_unique_vocab_counts_from_source(self, src):
