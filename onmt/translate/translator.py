@@ -380,7 +380,7 @@ class Translator(object):
 
         if type(memory_bank) == tuple:
             device = memory_bank[0].device
-            memory_bank = [tile(m, beam_size, dim=1) for m in memory_bank]
+            memory_bank = tuple(tile(m, beam_size, dim=1) for m in memory_bank)
         else:
             memory_bank = tile(memory_bank, beam_size, dim=1)
             device = memory_bank.device
@@ -540,8 +540,8 @@ class Translator(object):
                               -1, alive_attn.size(-1))
 
             # Reorder states.
-            if type(memory_bank) == list:
-                memory_bank = [m.index_select(1, select_indices) for m in memory_bank]
+            if type(memory_bank) == tuple:
+                memory_bank = tuple(m.index_select(1, select_indices) for m in memory_bank)
             else:
                 memory_bank = memory_bank.index_select(1, select_indices)
             memory_lengths = memory_lengths.index_select(0, select_indices)
