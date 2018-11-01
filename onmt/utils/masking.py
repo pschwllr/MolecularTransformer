@@ -93,6 +93,8 @@ class ChemVocabMask(object):
         mask = mask.to(src.device)
         return mask
 
+
+
     def _get_unique_vocab_counts_from_source(self, src):
-        unique_counts_dicts = [dict(zip(*np.unique(s.numpy(), return_counts=True))) for s in src.t()]
+        unique_counts_dicts = [dict(zip(*np.unique(s.cpu().numpy(), return_counts=True))) for s in src.t()]
         return unique_counts_dicts
