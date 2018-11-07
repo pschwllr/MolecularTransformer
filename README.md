@@ -1,6 +1,7 @@
 # Molecular Transformer
 
-This is the code for the "Molecular Transformer for Chemical Reaction Prediction and Uncertainty Estimation" paper. 
+This is the code for the "Molecular Transformer for Chemical Reaction Prediction and Uncertainty Estimation" paper
+found on [ChemRxiv](https://chemrxiv.org/articles/Molecular_Transformer_for_Chemical_Reaction_Prediction_and_Uncertainty_Estimation/7297379). 
 
 To implement our models we were based on [OpenNMT-py (v0.4.1)](http://opennmt.net/OpenNMT-py/).
 
