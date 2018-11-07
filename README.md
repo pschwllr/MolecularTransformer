@@ -171,8 +171,18 @@ but also to develop more application oriented AI models to assist humans in the 
 Our paper can be cited as follows: 
 
 ```
-@article{
-    to be defined
+@article{Schwaller2018Molecular,
+author = "{Philippe Schwaller and 
+          Teodoro Laino and 
+          Theophile Gaudin and 
+          Peter Bolgar and 
+          Costas Bekas and 
+          Alpha A. Lee}",
+title = "{Molecular Transformer for Chemical Reaction Prediction and Uncertainty Estimation}",
+year = "2018",
+month = "11",
+url = "https://chemrxiv.org/articles/Molecular_Transformer_for_Chemical_Reaction_Prediction_and_Uncertainty_Estimation/7297379",
+doi = "10.26434/chemrxiv.7297379.v1"
 }
 ```
 
