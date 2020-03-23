@@ -1,7 +1,8 @@
 # Molecular Transformer
 
-This is the code for the "Molecular Transformer for Chemical Reaction Prediction and Uncertainty Estimation" paper
-found on [ChemRxiv](https://chemrxiv.org/articles/Molecular_Transformer_for_Chemical_Reaction_Prediction_and_Uncertainty_Estimation/7297379). 
+This is the code for the "Molecular Transformer: A Model for Uncertainty-Calibrated Chemical Reaction Prediction" paper published in [ACS Central Science](https://pubs.acs.org/doi/full/10.1021/acscentsci.9b00576).
+
+The preprint presented at the ML for Molecules Materials workshop at Neurips 2018 can be found on [ChemRxiv](https://chemrxiv.org/articles/Molecular_Transformer_for_Chemical_Reaction_Prediction_and_Uncertainty_Estimation/7297379).
 
 To implement our models we were based on [OpenNMT-py (v0.4.1)](http://opennmt.net/OpenNMT-py/).
 
@@ -172,18 +173,15 @@ but also to develop more application oriented AI models to assist humans in the 
 Our paper can be cited as follows: 
 
 ```
-@article{Schwaller2018Molecular,
-author = "{Philippe Schwaller and 
-          Teodoro Laino and 
-          Theophile Gaudin and 
-          Peter Bolgar and 
-          Costas Bekas and 
-          Alpha A. Lee}",
-title = "{Molecular Transformer for Chemical Reaction Prediction and Uncertainty Estimation}",
-year = "2018",
-month = "11",
-url = "https://chemrxiv.org/articles/Molecular_Transformer_for_Chemical_Reaction_Prediction_and_Uncertainty_Estimation/7297379",
-doi = "10.26434/chemrxiv.7297379.v1"
+@article{schwaller2019molecular,
+  title={Molecular transformer: A model for uncertainty-calibrated chemical reaction prediction},
+  author={Schwaller, Philippe and Laino, Teodoro and Gaudin, Th{\'e}ophile and Bolgar, Peter and Hunter, Christopher A and Bekas, Costas and Lee, Alpha A},
+  journal={ACS central science},
+  volume={5},
+  number={9},
+  pages={1572--1583},
+  year={2019},
+  publisher={ACS Publications}
 }
 ```
 
