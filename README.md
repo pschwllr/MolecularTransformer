@@ -85,7 +85,7 @@ By the time of writing the function to generate those random equivalent SMILES w
 ```python
 from rdkit import Chem
 smi = ''
-random_equivalent_smiles = Chem.MolFromSmiles(Chem.MolToSmiles(smi, doRandom=True))
+random_equivalent_smiles = Chem.MolToSmiles(Chem.MolFromSmiles(smi), doRandom=True)
 ```
 
 ## Input file generation
